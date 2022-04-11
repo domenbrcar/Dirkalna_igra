@@ -1,0 +1,43 @@
+//Koda za sledenje kamere
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class camFollow : MonoBehaviour
+{
+    //Tarča
+    public Transform target;
+
+    //Pozicija
+    public Vector3 tPos;
+
+    //Pomik
+    public Vector3 offset;
+
+    //Hitrost sledenja pozicije
+    [Range(0, 10)]
+	[SerializeField] float lerpPositionMultiplier = 1f;
+
+    //Hitrost sledenja rotaicije
+	[Range(0, 10)]		
+	[SerializeField] float lerpRotationMultiplier = 1f;
+
+    // Posodobitev se kliče enkrat na sličico (angl. frame)
+    void FixedUpdate()
+    {
+        //izračuna "tPos"
+        tPos = target.position + target.TransformDirection(offset);
+        //"curRot" dobi vrednost trenutne rotaticje kamere
+        Quaternion curRot = transform.rotation;
+
+		// Pogleda proti tarči
+		transform.LookAt(target);
+
+		//Se premika proti poziciji tarče s hitrostjo "lerpPositionMultiplier"
+		transform.position = Vector3.Lerp(transform.position, tPos, Time.fixedDeltaTime * lerpPositionMultiplier);
+
+        //Se obrača proti poziciji tarče s hitrostjo "lerpRotationMultiplier"
+		transform.rotation = Quaternion.Lerp(curRot, transform.rotation, Time.fixedDeltaTime * lerpRotationMultiplier);
+    }
+}

@@ -1,0 +1,37 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using TMPro;
+
+public class endScreen : MonoBehaviour
+{
+    public TMP_Text timeText;
+    public TMP_Text B_timeText;
+
+    public string time;
+    public string B_time;
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        timeText.text = "Čas: " + time;
+        B_timeText.text = "Najboljši: " + B_time;
+    }
+
+    //naloži isto sceno
+    public void Retry(){
+        SceneManager.LoadScene(1);
+    }
+
+    //naloži menu sceno
+    public void Menu(){
+        SceneManager.LoadScene(0);
+    }
+}

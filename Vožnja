@@ -1,0 +1,63 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class drive : MonoBehaviour
+{
+    public WheelCollider[] steerTires;
+    public WheelCollider[] driveTires;
+
+    public Rigidbody rb;
+    public Transform centerOfMass;
+
+    public float maxSteerAngle;
+    public float steerSpeed;
+    public float steerAngle;
+    public float brakeForce;
+
+    public speed spd;
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        //kot zavijanja je enak vodoravnem vhodu (a = -1, d = 1)
+        steerAngle = Input.GetAxis("Horizontal") * maxSteerAngle;
+
+        //center mase je na poziciji "centerOfMass"
+        rb.centerOfMass = centerOfMass.localPosition;
+
+        //rotacija sprednjih gum
+        foreach (WheelCollider steerTire in steerTires)
+        {
+            steerTire.steerAngle = Mathf.Lerp(steerTire.steerAngle, steerAngle, steerSpeed);
+        }
+        
+        //pogon gum
+        foreach (WheelCollider driveTire in driveTires)
+        {
+            driveTire.motorTorque = spd.wheelSpeed / 10;
+        }
+
+        //če dobi tipko "S" začne bremzati
+        if(Input.GetKey(KeyCode.S)){
+
+            foreach (WheelCollider driveTire in driveTires)
+            {
+                driveTire.brakeTorque = brakeForce;
+            }
+            
+        }else{
+            foreach (WheelCollider driveTire in driveTires)
+                {
+                    driveTire.brakeTorque = 0;
+                }
+        }
+
+    }
+}

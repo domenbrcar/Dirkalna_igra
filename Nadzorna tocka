@@ -1,0 +1,62 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class checkpoint : MonoBehaviour
+{
+    public string place;
+    public Renderer rend_1, rend_2;
+    public Material Text_a1,Text_a2,Text_b1,Text_b2;
+    public bool current, next;
+    public Collider col;
+    
+    // Start is called before the first frame update
+    void Start()
+    {
+        
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        
+        if(current){
+            rend_1.sharedMaterial = Text_a2;
+            rend_2.sharedMaterial = Text_b2;
+        }else  if(next){
+            rend_1.sharedMaterial = Text_a1;
+            rend_2.sharedMaterial = Text_b1;
+        }else{
+            rend_1.enabled = false;
+            rend_2.enabled = false;
+            col.enabled = false;
+        }
+
+        rend_1.enabled = current || next;
+        rend_2.enabled = current || next;
+        col.enabled = current;
+
+        //checkpoint se vrti okoli y osi
+        Vector3 eulerRotation = new Vector3( rend_2.gameObject.transform.localEulerAngles.x,  rend_2.gameObject.transform.localEulerAngles.y + 20 * Time.deltaTime,  rend_2.gameObject.transform.localEulerAngles.z);
+        rend_2.gameObject.transform.localRotation = Quaternion.Euler(eulerRotation);
+    }
+
+    
+    void OnTriggerEnter(Collider other){
+        //ob dotiku igralca z prvo nadzorno točko začne dirko
+        if(place == "start"){
+            FindObjectOfType<raceManager>().started = true;
+        }
+
+        //ob dotiku igralca z nadzorno točko  konča dirko
+        if(place == "end"){
+            FindObjectOfType<raceManager>().started = false;
+            FindObjectOfType<raceManager>().EndScreen();
+        }
+
+        //ob dotiku igralca z zadnjo nadzorno točko pooščemo naslednjo nadzorno točko
+        if(other.tag == "Player" && current){
+            FindObjectOfType<raceManager>().NewCheckpoint();
+        }
+    }
+}

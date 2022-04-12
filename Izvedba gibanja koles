@@ -1,0 +1,56 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class wheelModel : MonoBehaviour
+{
+        public bool cancelSteerAngle = false;
+        public GameObject obj_wheelModel;
+        private WheelCollider _wheelCollider;
+
+        public Transform carBody;
+        public Transform brake;
+
+        public Vector3 localRotOffset;
+
+        private float lastUpdate;
+
+        void Start()
+        {
+            lastUpdate = Time.realtimeSinceStartup;
+
+            _wheelCollider = GetComponent<WheelCollider>();
+        }
+        
+        void FixedUpdate()
+        {
+            if (Time.realtimeSinceStartup - lastUpdate < 1f/60f)
+            {
+                return;
+            }
+            lastUpdate = Time.realtimeSinceStartup;
+
+            //nastavi rotacijo bremz
+            Vector3 eulerRotation = new Vector3(carBody.eulerAngles.x, gameObject.transform.eulerAngles.y, carBody.eulerAngles.z + 90);
+            brake.rotation = Quaternion.Euler(eulerRotation);
+            brake.position = obj_wheelModel.transform.position;
+
+            //nastavi rotacijo gum
+            if (obj_wheelModel && _wheelCollider)
+            {
+                Vector3 pos = new Vector3(0, 0, 0);
+                Quaternion quat = new Quaternion();
+                _wheelCollider.GetWorldPose(out pos, out quat);
+
+                obj_wheelModel.transform.rotation = quat;
+                if (cancelSteerAngle)
+                    obj_wheelModel.transform.rotation = transform.parent.rotation;
+
+                obj_wheelModel.transform.localRotation *= Quaternion.Euler(localRotOffset);
+                obj_wheelModel.transform.position = pos;
+
+                WheelHit wheelHit;
+                _wheelCollider.GetGroundHit(out wheelHit);
+            }
+        }
+}

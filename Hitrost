@@ -1,0 +1,142 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using TMPro;
+using UnityEngine.UI;
+using System;
+
+public class speed : MonoBehaviour
+{
+    public AnimationCurve hpCurve;
+    private float hp;
+    public float wheelSpeed;
+    public TMP_Text speedText;
+
+    public bool engineTurnedON;
+    public bool automaticGearBox;
+    public string automaticGearBoxMode;
+    public Image neutralImg, driveImg, reverseImg;
+
+    public spedometer spedometer;
+    public Rigidbody rb;
+
+    public AudioSource carEngineSound;
+    public float soundModifier;
+    public float soundPitch;
+
+    public int gear;
+    public float[] gearModifiers;
+    public TMP_Text gearText;
+
+    public GameObject carObject;
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        spedometer.rpm = 0;
+        carEngineSound.volume = 0;
+        wheelSpeed = 0;
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        //"gearText" izpiše vrednost od "gear"
+        gearText.text = gear.ToString();
+
+        //"speedText" izpiše trenutno hitrost
+        speedText.text = Math.Round(rb.velocity.magnitude * 2.4).ToString();
+
+        //trenutni konji
+        hp = hpCurve.Evaluate(spedometer.rpm) * 2;
+
+        //vžig in uašanje avta 
+        if(Input.GetKeyDown(KeyCode.E) && !engineTurnedON){
+            engineTurnedON = true;
+            carEngineSound.volume = 1;
+        }else if(Input.GetKeyDown(KeyCode.E) && engineTurnedON){
+            engineTurnedON = false;
+            carEngineSound.volume = 0;
+        }
+
+        //višina zvoka motorja
+        carEngineSound.pitch = (spedometer.rpm / (spedometer.num_maxRpm * 1000)) * soundModifier + soundPitch;
+
+        //delovanje rpm-ov
+        if((spedometer.rpm < spedometer.num_maxRpm * 1000 && Input.GetKey(KeyCode.W) || spedometer.rpm < 1000) && engineTurnedON){
+            spedometer.rpm += hp * Time.deltaTime * 10 / gearModifiers[gear + 1];
+        }else if((spedometer.rpm>1000) && engineTurnedON){
+            spedometer.rpm -= 8000 * Time.deltaTime / gearModifiers[gear + 1];
+        }else if(!engineTurnedON && spedometer.rpm>0){
+            spedometer.rpm -= 8000 * Time.deltaTime;
+        }
+
+        //če so rpm-i prišli do meje skočijo nazaj
+        if(spedometer.rpm>spedometer.num_maxRpm * 1000){
+            spedometer.rpm -= 500f;
+        }
+
+        //stanje avtomatskega menjalnika
+        if(Input.GetKeyDown(KeyCode.R)){
+            automaticGearBoxMode = "Reverse";
+        }else if(Input.GetKeyDown(KeyCode.Q)){
+            automaticGearBoxMode = "Drive";
+            gear = 1;
+        }else if(Input.GetKeyDown(KeyCode.T)){
+            automaticGearBoxMode = "Neutral";
+        }
+
+        if(Input.GetKeyDown(KeyCode.M) && automaticGearBox){
+            automaticGearBox = false;
+        }else if(Input.GetKeyDown(KeyCode.M) && !automaticGearBox){
+            automaticGearBox = true;
+        }
+
+        //algoritem za avtomatski menjalnik
+        if(automaticGearBox){
+            if(automaticGearBoxMode == "Drive"){
+                if(spedometer.rpm > (spedometer.num_maxRpm * 1000) - 500 && gear < gearModifiers.Length - 2 && rb.velocity.magnitude > 10){
+                    //prestavi na višjo prestavo
+                    gear += 1;
+                    spedometer.rpm /= gearModifiers[gear + 1];
+                }else if(spedometer.rpm<1500 && gear > 1 && !Input.GetKey(KeyCode.W)){
+                    gear -= 1;
+                    spedometer.rpm *= gearModifiers[gear + 1];
+                }else if(spedometer.rpm<(spedometer.num_maxRpm * 1000) / 3 && gear > 1 && Input.GetKeyDown(KeyCode.W)){
+                    gear -= 1;
+                    spedometer.rpm *= gearModifiers[gear + 1];
+                }
+                neutralImg.color = Color.HSVToRGB(0, 0, 1f, true);
+                reverseImg.color = Color.HSVToRGB(0, 0, 1f, true);
+                driveImg.color = Color.HSVToRGB(0, 0, 0.75f, true);
+
+            }else if(automaticGearBoxMode == "Neutral"){
+                neutralImg.color = Color.HSVToRGB(0, 0, 0.75f, true);
+                reverseImg.color = Color.HSVToRGB(0, 0, 1, true);
+                driveImg.color = Color.HSVToRGB(0, 0, 1, true);
+                gear = 0;
+            }
+            else if(automaticGearBoxMode == "Reverse"){
+                gear = -1;
+                neutralImg.color = Color.HSVToRGB(0, 0, 1f, true);
+                reverseImg.color = Color.HSVToRGB(0, 0, 0.75f, true);
+                driveImg.color = Color.HSVToRGB(0, 0, 1, true);
+            }
+        }else{
+            if(Input.GetKeyDown(KeyCode.Y)){
+                gear -= 1;
+                spedometer.rpm *= gearModifiers[gear - 1];
+            }else if(Input.GetKeyDown(KeyCode.X)){
+                gear += 1;
+                spedometer.rpm /= gearModifiers[gear - 1];
+            }
+        }
+        
+        //če je pritisjena tipka za gas, gre moč na gume
+        if(engineTurnedON && Input.GetKey(KeyCode.W)){
+            wheelSpeed = (hp * gear);
+        }else{
+            wheelSpeed = 0;
+        }
+    }
+}

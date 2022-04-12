@@ -1,0 +1,129 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using TMPro;
+
+public class mainMenu : MonoBehaviour
+{
+    public int carSelected;
+    public GameObject[] carModels;
+
+    public TMP_Text bestTime;
+
+    public float B_miliseconds;
+    public int B_seconds;
+    public int B_minutes;
+
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        B_miliseconds = PlayerPrefs.GetFloat("B_miliseconds");
+        B_seconds = PlayerPrefs.GetInt("B_seconds");
+        B_minutes = PlayerPrefs.GetInt("B_minutes");
+
+        bestTime.text = "Najboljši: " + B_minutes.ToString() + "." + AddZeroInt(B_seconds) + "." + AddZeroFloat(B_miliseconds);
+
+        carSelected = PlayerPrefs.GetInt("SelectedCar");
+        foreach(GameObject car in carModels){
+           int posInArray = System.Array.IndexOf(carModels, car);
+           if(posInArray == carSelected){
+               //
+               car.SetActive(true);
+           }else{
+               car.SetActive(false);
+           }
+       }
+
+       pomocTab.SetActive(false);
+    }
+
+    //izbere naslednji avto
+    public void NextCar(){
+        if(carSelected < carModels.Length - 1){
+            carSelected ++;
+        }else{
+            carSelected = 0;
+        }
+       
+       PlayerPrefs.SetInt("SelectedCar", carSelected);
+
+       foreach(GameObject car in carModels){
+           int posInArray = System.Array.IndexOf(carModels, car);
+           if(posInArray == carSelected){
+               car.SetActive(true);
+           }else{
+               car.SetActive(false);
+           }
+       }
+    }
+
+    //izbere prejšni avto
+    public void PrevCar(){
+        if(carSelected > 0){
+            carSelected --;
+        }else{
+            carSelected = carModels.Length - 1;
+        }
+        
+       PlayerPrefs.SetInt("SelectedCar", carSelected);
+       foreach(GameObject car in carModels){
+           int posInArray = System.Array.IndexOf(carModels, car);
+           if(posInArray == carSelected){
+               car.SetActive(true);
+           }else{
+               car.SetActive(false);
+           }
+       }
+    }
+
+    //naloži sceno z dirko
+    public void Play(){
+        SceneManager.LoadScene(1);
+    }
+
+    public GameObject pomocTab;
+
+    public void Help(){
+        if(pomocTab.activeSelf){
+            pomocTab.SetActive(false);
+        }else if(!pomocTab.activeSelf){
+            pomocTab.SetActive(true);
+        }
+    }
+
+    //zapusti igro
+    public void Quit(){
+        Application.Quit();
+    }
+
+    public void ResetBestTime(){
+
+        PlayerPrefs.SetFloat("B_miliseconds", 99);
+        PlayerPrefs.SetInt("B_seconds", 99);
+        PlayerPrefs.SetInt("B_minutes", 99);
+
+        B_miliseconds = PlayerPrefs.GetFloat("B_miliseconds");
+        B_seconds = PlayerPrefs.GetInt("B_seconds");
+        B_minutes = PlayerPrefs.GetInt("B_minutes");
+        
+        bestTime.text = "Najboljši: " + B_minutes.ToString() + "." + AddZeroInt(B_seconds) + "." + AddZeroFloat(B_miliseconds);
+    }
+
+    string AddZeroInt(int st){
+        if(st < 10){
+            return "0" + st.ToString();
+        }else{
+            return st.ToString();
+        }
+    }
+
+    string AddZeroFloat(float st){
+        if(st < 10){
+            return "0" + st.ToString("n0");
+        }else{
+            return st.ToString("n0");
+        }
+    }
+}

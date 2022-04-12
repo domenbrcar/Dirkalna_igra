@@ -1,0 +1,51 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class spedometer : MonoBehaviour
+{
+    public float num_maxRpm;
+    public float num_angle;
+
+    public GameObject obj_RpmPoint;
+    public Rigidbody rb;
+
+    public Transform rpmStick;
+    public speed spd;
+
+    public float rpm;
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        num_angle = CalculateRpmRotation(num_maxRpm);
+        SpawnRpmPoints(num_angle);
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        // obrne kazalec glede na število obratov
+        rpmStick.rotation = Quaternion.AngleAxis((-225 * rpm) / (num_maxRpm * 1000f) + 46, Vector3.forward);
+    }
+
+
+    // funkcija za zgradbo števca
+    void SpawnRpmPoints(float spawnAngle){
+
+        //premikanje števca
+        for (int angle = 0; angle < num_maxRpm - 1 ; angle++)
+        {
+            Transform rpmPoint = Instantiate(obj_RpmPoint, FindObjectOfType<Canvas>().transform.position, Quaternion.AngleAxis((-spawnAngle * angle+1) + (45-spawnAngle), Vector3.forward)).transform;
+            rpmPoint.SetParent(transform);
+            rpmPoint.position = transform.position;
+            rpmPoint.localScale = new Vector3(1,1,1);
+        }
+    }
+
+    // izračun kota na števcu glede na num_maxRpm
+    float CalculateRpmRotation(float maxRpm){
+        float rpmRotation = 225f / maxRpm;
+        return rpmRotation;
+    }
+}

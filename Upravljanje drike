@@ -1,0 +1,169 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+
+public class raceManager : MonoBehaviour
+{
+    //checkpoints 
+    public int currentCheckpoint_index;
+    public GameObject[] obj_checkpoints;
+
+    //timer 
+    public TMP_Text timerText;
+    public TMP_Text checkpointsText;
+    public float miliseconds;
+    public int seconds;
+    public int minutes;
+
+    public float B_miliseconds;
+    public int B_seconds;
+    public int B_minutes;
+
+    //končni zaslon 
+    public bool started;
+    public GameObject obj_endScreen;
+
+    //zaustavitveni zaslon
+    private bool paused;
+    public GameObject pausedScreen;
+
+    //prikaže avto
+    public GameObject[] cars;
+    public int selectedCar;
+    public Transform carSpawnPos;
+    public camFollow camFlw;
+
+    //glasba
+    public AudioSource music;
+    private bool musicIsPlaying;
+    public float musicVolume;
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        B_miliseconds = PlayerPrefs.GetFloat("B_miliseconds");
+        B_seconds = PlayerPrefs.GetInt("B_seconds");
+        B_minutes = PlayerPrefs.GetInt("B_minutes");
+
+        //na začetku igre pojavi avto
+        selectedCar = PlayerPrefs.GetInt("SelectedCar");
+        GameObject car = Instantiate(cars[selectedCar], carSpawnPos.position, carSpawnPos.rotation);
+
+        //kameri da tarčo kateri mora slediti
+        camFlw.target = car.transform;
+
+        //skrije "ekran" ki se pojavi ko zaključiš dirko
+        obj_endScreen.SetActive(false);
+
+        NewCheckpoint();
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        //timerText izpiše vrednost timerja
+        timerText.text = minutes.ToString() + "." + AddZeroInt(seconds) + "." + AddZeroFloat(miliseconds);
+
+        //checkpointsText izpiše na katrem checkpointu si
+        checkpointsText.text = currentCheckpoint_index.ToString() + "/" + obj_checkpoints.Length.ToString();
+
+        if(Input.GetKeyDown(KeyCode.P) && !musicIsPlaying){
+            music.Play();
+        }else if(Input.GetKeyDown(KeyCode.P) && musicIsPlaying){
+            music.Stop();
+        }
+
+        if(Input.GetKeyDown(KeyCode.O) && musicVolume < 1){
+            musicVolume += 0.1f;
+            music.volume = musicVolume;
+        }else if(Input.GetKeyDown(KeyCode.I) && musicVolume > 0){
+            musicVolume -= 0.1f;
+            music.volume = musicVolume;
+        }
+
+        //če je pritisjena tipka ESC se pojavi zaustavitveni meni
+        if(Input.GetKeyDown(KeyCode.Escape) && paused){
+            paused = false;
+        }else if(Input.GetKeyDown(KeyCode.Escape) && !paused){
+            paused = true;
+        }
+
+        pausedScreen.SetActive(paused);
+
+        //algoritem za timer
+        if(started){
+            miliseconds += 100 * Time.deltaTime;
+            if(miliseconds >= 100){
+                seconds++;
+                miliseconds -= 100;
+            }
+            if(seconds >= 60){
+                minutes++;
+                seconds -= 60;
+            }
+        }
+        
+    }
+
+    public void NewCheckpoint(){
+
+        //checkpoint index se poveča za 1
+        currentCheckpoint_index++;
+
+        //preveri kateri je naslednji checkpoint
+        foreach (GameObject checkpoint in obj_checkpoints)
+        {   
+            //dobi index "checkpoint"-a (njegovo mesto v listu "obj_checkpoints")
+            int positionInArray = System.Array.IndexOf(obj_checkpoints, checkpoint);
+
+            
+            if(currentCheckpoint_index == positionInArray){
+                //trenutni "checkpoint" postane viden
+                checkpoint.GetComponent<checkpoint>().current = true;
+                checkpoint.GetComponent<checkpoint>().next = false;
+            }else if(currentCheckpoint_index + 1 == positionInArray){
+                //naslednji "checkpoint" postane prosojen
+                checkpoint.GetComponent<checkpoint>().next = true;
+            }else{
+                checkpoint.GetComponent<checkpoint>().current = false;
+                checkpoint.GetComponent<checkpoint>().next = false;
+            }
+        }
+    }
+
+    //ko se dirka konča se prikaže končni "ekran"
+    public void EndScreen(){
+        obj_endScreen.SetActive(true);
+        if((miliseconds + seconds*100 + minutes*6000) < (B_miliseconds + B_seconds*100 + B_minutes*6000)){
+            B_miliseconds = miliseconds;
+            B_seconds = seconds;
+            B_minutes = minutes;
+            PlayerPrefs.GetFloat("B_miliseconds", B_miliseconds);
+            PlayerPrefs.SetInt("B_seconds", B_seconds);
+            PlayerPrefs.SetInt("B_minutes", B_minutes);
+        }
+
+        endScreen endScr = obj_endScreen.GetComponent<endScreen>();
+        endScr.time = timerText.text;
+        endScr.B_time = B_minutes.ToString() + "." + AddZeroInt(B_seconds) + "." + AddZeroFloat(B_miliseconds);
+
+    }
+
+    string AddZeroInt(int st){
+        if(st < 10){
+            return "0" + st.ToString();
+        }else{
+            return st.ToString();
+        }
+    }
+
+    string AddZeroFloat(float st){
+        if(st < 10){
+            return "0" + st.ToString("n0");
+        }else{
+            return st.ToString("n0");
+        }
+    }
+}
